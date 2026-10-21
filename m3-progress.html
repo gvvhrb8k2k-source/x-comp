@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M3 Linear Progress Indicator - Step 1</title>
+  <style>
+    /* تهيئة بيئة العرض والسنترة */
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #121212; /* خلفية داكنة لتوضيح الحدود */
+    }
+
+    /* 
+      1. Container (الحاوية الرئيسية للعنصر)
+      تحدد مساحة المؤشر الكاملة في الصفحة
+    */
+    .m3-linear-progress {
+      position: relative;
+      width: 320px;            /* عرض افتراضي للمؤشر */
+      height: 4px;             /* الارتفاع القياسي لنظام M3 (يمكن رفعه لـ 8px للوسائط) */
+      border-radius: 2px;      /* Pill Shape = نصف الارتفاع */
+      background-color: #333;  /* لون مؤقت للمسار الخلفي (Track) */
+      overflow: hidden;        /* لضمان عدم خروج المؤشر النشط عن الحواف الدائرية */
+    }
+
+    /* 
+      2. Active Indicator (شريط التقدم)
+      يمثل الجزء المنقضي من الصوت أو الفيديو
+    */
+    .m3-linear-progress__active-indicator {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;                /* يبدأ من اليمين في الواجهات العربية RTL */
+      width: 45%;              /* نسبة افتراضية للتجربة (45%) */
+      background-color: #FFF;  /* لون مؤقت للمؤشر النشط */
+      border-radius: 2px;      /* حواف دائرية بالكامل لكل طرف */
+    }
+
+    /* 
+      3. Stop Indicator (نقطة نهاية المسار M3 Stop Cap)
+    */
+    .m3-linear-progress__stop-indicator {
+      position: absolute;
+      top: 50%;
+      left: 0;                 /* تثبت في أقصى اليسار (نهاية المسار للواجهات العربية) */
+      transform: translateY(-50%);
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background-color: #666;  /* لون مؤقت */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- الهيكل الهندسي لمؤشر M3 -->
+  <div class="m3-linear-progress" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100">
+    <div class="m3-linear-progress__active-indicator"></div>
+    <div class="m3-linear-progress__stop-indicator"></div>
+  </div>
+
+</body>
+</html>
