@@ -1,106 +1,122 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <!-- منع التخزين المؤقت (Cache) لضمان ظهور التعديلات فوراً -->
+  <!-- منع التخزين المؤقت (Cache) لضمان التحديث الفوري -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>M3 Linear Progress - Official Material Web Motion</title>
+  <title>M3 Custom Audio/Video Progress Bar</title>
   <style>
-    body {
+    /* تهيئة الصفحة والتكامل مع الكروما الخضراء لإزالة الخلفية بسهولة في المونتاج */
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #00FF00; /* Green Screen للكروما */
       display: flex;
       justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background-color: #121212;
+      align-items: flex-end;
     }
 
-    /* 1. الحاوية الرئيسية للمسار (Track) */
-    .m3-linear-progress {
-      position: relative;
-      width: 320px;
-      height: 4px;
-      border-radius: 2px;
-      background-color: #333333;
+    /* 
+      الحاوية الرئيسية للشريط - أبعاد لدقة 1080x1920 القياسية
+    */
+    .m3-video-progress-container {
+      position: absolute;
+      bottom: 32px;                 /* المسافة من الحافة السفلية */
+      left: 28px;                   /* هامش اليسار */
+      right: 28px;                  /* هامش اليمين */
+      height: 10px;                 /* الارتفاع الكلي للشريط */
+      background-color: rgba(0, 0, 0, 0.5); /* الجزء المتبقي: أسود شفاف 50% */
+      border-radius: 2px;           /* زوايا شبه مستقيمة 2px */
       overflow: hidden;
-      transform: translateZ(0); /* تفعيل التسريع الرسومي للعنصر */
+      transform: translateZ(0);     /* تسريع رسومي لضمان سلاسة الإطارات */
     }
 
-    /* 2. شريط التخزين المؤقت (Buffer) باستخدام scaleX */
-    .m3-linear-progress__buffer {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      right: 0;
-      left: 0;
-      background-color: rgba(255, 255, 255, 0.25);
+    /* 
+      الجزء المتحرك (Progress Indicator)
+    */
+    .m3-video-progress-bar {
+      height: 100%;
+      width: 100%;
+      background-color: #FFFFFF;    /* أبيض نقي 100% */
       border-radius: 2px;
-      transform-origin: right; /* لأن الواجهة RTL، يبدأ التمدد من اليمين لليسار */
-      transform: scaleX(0);    /* القيمة تبدأ من 0 إلى 1 */
-      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: left;       /* الحركة تبدأ من اليسار إلى اليمين */
+      transform: scaleX(0);         /* البداية من 0% */
+      will-change: transform;
     }
 
-    /* 3. شريط التقدم النشط (Active Indicator) باستخدام scaleX الرسمي */
-    .m3-linear-progress__active-indicator {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      right: 0;
-      left: 0;
-      background-color: #D0BCFF; /* لون M3 Primary */
-      border-radius: 2px;
-      transform-origin: right;
-      transform: scaleX(0);    /* القيمة تتغير هنا باحترافية */
-      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    /* 4. نقطة النهاية (Stop Indicator) */
-    .m3-linear-progress__stop-indicator {
-      position: absolute;
-      top: 50%;
-      left: 0;
-      transform: translateY(-50%);
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background-color: #666666;
+    /* 
+      التكيف مع دقة 720x1280 (ضرب القياسات في 0.666)
+    */
+    @media (max-width: 720px) {
+      .m3-video-progress-container {
+        bottom: 21px;
+        left: 19px;
+        right: 19px;
+        height: 7px;
+        border-radius: 1.33px;
+      }
+      .m3-video-progress-bar {
+        border-radius: 1.33px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <div class="m3-linear-progress" role="progressbar">
-    <div class="m3-linear-progress__buffer" id="bufferBar"></div>
-    <div class="m3-linear-progress__active-indicator" id="activeBar"></div>
-    <div class="m3-linear-progress__stop-indicator"></div>
+  <!-- شريط التقدم المخصص للوسائط -->
+  <div class="m3-video-progress-container">
+    <div class="m3-video-progress-bar" id="progressBar"></div>
   </div>
 
   <script>
-    // المحاكاة البرمجية باستخدام قيم الـ scaleX (من 0.0 إلى 1.0) بدلاً من النسبة المئوية
-    const activeBar = document.getElementById('activeBar');
-    const bufferBar = document.getElementById('bufferBar');
+    const progressBar = document.getElementById('progressBar');
 
-    let progress = 0.0;
-    let buffer = 0.0;
+    // زمن الأغنية أو الفيديو الافتراضي للتحكم (بالثواني)
+    const durationInSeconds = 30; // يمكنك تغيير هذا الرقم ليطابق زمن المقطع الصوتي لديك
+    let startTime = null;
 
-    setInterval(() => {
-      if (progress <= 1.0) {
-        // تطبيق مقياس scaleX بدقة مطابقة لمكتبة Material Web
-        activeBar.style.transform = `scaleX(${progress})`;
-        buffer = Math.min(progress + 0.3, 1.0);
-        bufferBar.style.transform = `scaleX(${buffer})`;
-        
-        progress += 0.01;
-      } else {
-        progress = 0.0;
-        buffer = 0.0;
+    function updateProgress(timestamp) {
+      if (!startTime) startTime = timestamp;
+      
+      // حساب الزمن المنقضي بالثواني
+      const elapsedTime = (timestamp - startTime) / 1000;
+      const progress = Math.min(elapsedTime / durationInSeconds, 1.0);
+
+      /* 
+        إضافة المرونة البصرية والانكماش/التمدد الهادئ (Fluid Pulse Effect)
+        يعطي نفس شعور حركة أندرويد الحية دون أن يؤثر على دقة التزامن الزمني
+      */
+      let fluidOffset = 0;
+      if (progress > 0 && progress < 1.0) {
+        fluidOffset = Math.sin(elapsedTime * 6) * 0.003; 
       }
-    }, 50);
+
+      const finalScale = Math.max(0, Math.min(1.0, progress + fluidOffset));
+
+      // تطبيق التحديث على كارت الشاشة فوراً مع كل إطار (60fps/120fps)
+      progressBar.style.transform = `scaleX(${finalScale})`;
+
+      if (progress < 1.0) {
+        requestAnimationFrame(updateProgress);
+      } else {
+        // عند النهاية يكتمل الشريط بالكامل باللون الأبيض
+        progressBar.style.transform = 'scaleX(1)';
+      }
+    }
+
+    // بدء الحركة والتنسيق الزمني مع أول إطار
+    requestAnimationFrame(updateProgress);
   </script>
 </body>
 </html>
